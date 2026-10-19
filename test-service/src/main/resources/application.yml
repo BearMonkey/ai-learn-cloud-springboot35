@@ -1,0 +1,49 @@
+# ================================================================
+# test-service —— 测试服务配置
+# ================================================================
+
+spring:
+  application:
+    name: test-service
+  profiles:
+    active: dev
+  # Nacos 服务发现 + 配置中心
+  cloud:
+    nacos:
+      config:
+        server-addr: 192.168.1.200:8848
+        namespace: 08f5b907-570f-4347-9a73-3b182ad669ae
+        group: MALL_GROUP
+        file-extension: yaml
+      discovery:
+        server-addr: ${spring.cloud.nacos.config.server-addr}
+        namespace: ${spring.cloud.nacos.config.namespace}
+        group: ${spring.cloud.nacos.config.group}
+  config:
+    import:
+      - optional:nacos:${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
+# 日志（traceId 由 common-core TraceIdFilter 写入 MDC）
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"
+  level:
+    org.monkey.test: DEBUG
+
+# SpringDoc
+springdoc:
+  api-docs:
+    path: /test/v3/api-docs
+  swagger-ui:
+    path: /test/swagger-ui.html
+

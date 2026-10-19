@@ -1,0 +1,106 @@
+# ================================================================
+# gateway-service —— 开发环境配置
+# ================================================================
+
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          routes:
+            - id: iam-service
+              uri: lb://iam-service
+              predicates:
+                - Path=/api/iam/**
+              filters:
+                - StripPrefix=1
+            - id: catalog-service
+              uri: lb://catalog-service
+              predicates:
+                - Path=/api/catalog/**
+              filters:
+                - StripPrefix=1
+            - id: inventory-service
+              uri: lb://inventory-service
+              predicates:
+                - Path=/api/inventory/**
+              filters:
+                - StripPrefix=1
+            - id: order-service
+              uri: lb://order-service
+              predicates:
+                - Path=/api/order/**
+              filters:
+                - StripPrefix=1
+            - id: agent-server
+              uri: http://localhost:9000
+              predicates:
+                - Path=/api/mcp1/**
+              filters:
+                - StripPrefix=1
+            - id: mcp-server
+              uri: lb://mcp-server
+              predicates:
+                - Path=/api/sse,/api/mcp/message
+              filters:
+                - StripPrefix=1
+              metadata:
+                response-timeout: 300s
+                connect-timeout: 5000
+
+            - id: test-service
+              uri: lb://test-service
+              predicates:
+                - Path=/api/test/**
+              filters:
+                - StripPrefix=1
+  # =============================== redis 配置=====================
+#  data:
+#    redis:
+#      host: 192.168.1.200
+#      port: 6379
+#      password: Admin888
+#      lettuce:
+#        pool:
+#          max-active: 8
+#          max-idle: 8
+#          min-idle: 0
+# 网关鉴权
+gateway:
+  auth:
+    secret: monkey-iam-jwt-secret-key-2024-dev
+    public-paths:
+      - /iam/auth/register
+      - /iam/auth/login
+      - /swagger-ui
+      - /webjars
+      - /iam/v3/api-docs
+      - /catalog/v3/api-docs
+      - /inventory/v3/api-docs
+      - /order/v3/api-docs
+      - /catalog/products
+
+# SpringDoc 聚合 Swagger UI
+springdoc:
+  swagger-ui:
+    urls:
+      - name: 认证服务
+        url: /api/iam/v3/api-docs
+      - name: 产品服务
+        url: /api/catalog/v3/api-docs
+      - name: 库存服务
+        url: /api/inventory/v3/api-docs
+      - name: 订单服务
+        url: /api/order/v3/api-docs
+
+logging:
+  level:
+    org.monkey.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO

@@ -1,0 +1,36 @@
+# ================================================================
+# iam-service —— 认证服务配置
+# ================================================================
+
+spring:
+  profiles:
+    active: dev
+  application:
+    name: iam-service                       # 主键自增
+  # Nacos 服务发现 + 配置中心
+  cloud:
+    nacos:
+      config:
+        server-addr: 192.168.1.200:8848
+        namespace: 08f5b907-570f-4347-9a73-3b182ad669ae
+        group: MALL_GROUP
+        file-extension: yaml
+      discovery:
+        server-addr: ${spring.cloud.nacos.config.server-addr}
+        namespace: ${spring.cloud.nacos.config.namespace}
+        group: ${spring.cloud.nacos.config.group}
+  config:
+    import:
+      - optional:nacos:${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+
+# 日志格式（traceId 由 common-core TraceIdFilter 写入 MDC）
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"
+
+# SpringDoc
+springdoc:
+  api-docs:
+    path: /iam/v3/api-docs
+  swagger-ui:
+    path: /iam/swagger-ui.html

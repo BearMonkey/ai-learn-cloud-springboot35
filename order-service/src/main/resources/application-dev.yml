@@ -1,0 +1,6 @@
+server:
+  port: 8120
+
+logging:
+  level:
+    org.monkey.order: DEBUG

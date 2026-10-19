@@ -1,0 +1,151 @@
+# ================================================================
+# docker-compose.yml —— 商城微服务本地开发环境编排
+# ================================================================
+# 启动: docker-compose up -d
+# 停止: docker-compose down
+# 清理数据: docker-compose down -v
+# ================================================================
+
+version: "3.9"
+
+services:
+  # ================================================================
+  # MySQL 8.0 —— 关系型数据库
+  # 为 4 个微服务各维护独立数据库，实现物理隔离
+  # ================================================================
+  mysql:
+    image: mysql:8.0.36
+    container_name: mall-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql  # 初始化 4 个数据库
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+08:00
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mall-net
+
+  # ================================================================
+  # Redis 7 —— JWT 黑名单缓存
+  # ================================================================
+  redis:
+    image: redis:7.2-alpine
+    container_name: mall-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mall-net
+
+  # ================================================================
+  # Nacos 2.4.3 —— 服务注册 & 配置中心
+  # 开发环境使用 standalone 模式
+  # http://localhost:8848/nacos (账号: nacos / 密码: nacos)
+  # ================================================================
+  nacos:
+    image: nacos/nacos-server:v2.4.3
+    container_name: mall-nacos
+    restart: unless-stopped
+    environment:
+      MODE: standalone                          # 单机模式
+      PREFER_HOST_MODE: hostname                # 优先使用主机名注册
+      NACOS_AUTH_ENABLE: "true"                 # 开启认证
+      NACOS_AUTH_IDENTITY_KEY: serverIdentity
+      NACOS_AUTH_IDENTITY_VALUE: security
+      NACOS_AUTH_TOKEN: SecretKey012345678901234567890123456789012345678901234567890123456789
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+    ports:
+      - "8848:8848"
+      - "9848:9848"                             # gRPC 通信端口
+    volumes:
+      - nacos-data:/home/nacos/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s http://localhost:8848/nacos/v1/console/health/readiness || exit 1" ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - mall-net
+
+  # ================================================================
+  # RocketMQ 5.1.4 —— 消息队列
+  # NameServer: localhost:9876
+  # Broker: localhost:10911
+  # Dashboard: http://localhost:18080
+  # ================================================================
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.1.4
+    container_name: mall-rocketmq-namesrv
+    restart: unless-stopped
+    command: sh mqnamesrv
+    environment:
+      JAVA_OPT_EXT: "-server -Xms256m -Xmx256m"
+    ports:
+      - "9876:9876"
+    networks:
+      - mall-net
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.1.4
+    container_name: mall-rocketmq-broker
+    restart: unless-stopped
+    environment:
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+      JAVA_OPT_EXT: "-server -Xms512m -Xmx512m -Drocketmq.brokerIP1=127.0.0.1"
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+    depends_on:
+      - rocketmq-namesrv
+    command: sh mqbroker -n rocketmq-namesrv:9876
+    networks:
+      - mall-net
+
+  rocketmq-dashboard:
+    image: apacherocketmq/rocketmq-dashboard:latest
+    container_name: mall-rocketmq-dashboard
+    restart: unless-stopped
+    environment:
+      JAVA_OPTS: "-Drocketmq.namesrv.addr=rocketmq-namesrv:9876"
+    ports:
+      - "18080:8080"
+    depends_on:
+      - rocketmq-namesrv
+    networks:
+      - mall-net
+
+# ================================================================
+# 数据卷 —— 持久化存储
+# ================================================================
+volumes:
+  mysql-data:
+  redis-data:
+  nacos-data:
+
+# ================================================================
+# 自定义网络
+# ================================================================
+networks:
+  mall-net:
+    driver: bridge

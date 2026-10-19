@@ -1,0 +1,11 @@
+# ================================================================
+# catalog-service —— 产品目录服务配置
+# ================================================================
+
+server:
+  port: 8100
+
+# 日志（traceId 由 common-core TraceIdFilter 写入 MDC）
+logging:
+  level:
+    org.monkey.catalog: DEBUG

@@ -1,0 +1,10 @@
+判断商品是否属于所选类目。
+商品标题：{{title}}
+商品描述：{{description}}
+所选类目画像：{{selectedCategoryText}}
+相似类目候选：{{candidateText}}
+
+规则：
+1. 明确属于所选类目 → verdict=PASS，confidence 0~1
+2. 明确属于某个候选类目 → verdict=REJECT，suggestedCategory=该候选类目名
+3. 无法判断 → verdict=ESCALATE

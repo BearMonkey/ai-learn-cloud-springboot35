@@ -1,0 +1,11 @@
+# ================================================================
+# inventory-service —— 库存服务配置
+# ================================================================
+
+server:
+  port: 8110
+
+# 日志（traceId 由 common-core TraceIdFilter 写入 MDC）
+logging:
+  level:
+    org.monkey.inventory: DEBUG

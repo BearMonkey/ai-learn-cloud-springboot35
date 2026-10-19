@@ -1,0 +1,26 @@
+# ================================================================
+# iam-service —— 认证服务配置
+# ================================================================
+
+server:
+  port: 8090
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml    # mapper.xml 路径（复杂 SQL 时使用）
+  configuration:
+    map-underscore-to-camel-case: true             # 下划线转驼峰
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # SQL 日志
+  global-config:
+    db-config:
+      id-type: auto
+
+# JWT 签名密钥（后续阶段实现）
+jwt:
+  secret: monkey-iam-jwt-secret-key-2024-dev
+  expiration: 86400000          # Token 有效期：24 小时（毫秒）
+
+# 日志
+logging:
+  level:
+    org.monkey.iam: DEBUG

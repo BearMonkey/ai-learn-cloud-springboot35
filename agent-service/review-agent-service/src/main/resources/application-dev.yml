@@ -1,0 +1,48 @@
+# ================================================================
+# review-agent-service —— 审核Agent服务配置
+# ================================================================
+
+server:
+  port: 8140
+
+# 日志
+logging:
+  level:
+    org.monkey.iam: DEBUG
+
+langchain4j:
+  open-ai:
+    chat-model:
+      base-url: https://api.deepseek.com
+      api-key:
+      model-name: deepseek-v4-flash
+      max-tokens: 200       # 输出很短，限制住省 token
+  judge:
+    base-url: https://api.deepseek.com   # 与提词模型同服务，模型不同
+    model-name: deepseek-v4-flash              # 按你本地 ollama list 里的模型名改
+    api-key:
+    temperature: 0.1                   # 精判要稳定，低温度
+    timeout: 60s
+  parseInput:
+    base-url: https://api.deepseek.com
+    model-name: deepseek-v4-flash
+    api-key:
+    temperature: 0        # 提词要确定性，必须 0
+
+  # ========== langchain4j Ollama（bge-m3 embedding） ==========
+  ollama:
+    embedding-model:
+      base-url: http://127.0.0.1:11434
+      model-name: bge-m3
+
+# ========== Milvus 向量库（类目画像知识库，对应 MilvusConfig 的 milvus.config 前缀） ==========
+milvus:
+  config:
+    uri: http://192.168.1.200:19530
+    user: root
+    passwd: Milvus
+
+# ========== 高风险类目配置 ==========
+review:
+  category:
+    sensitive: 100002,100004,100008

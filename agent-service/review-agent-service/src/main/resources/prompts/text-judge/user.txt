@@ -1,0 +1,9 @@
+检查商品文本是否包含违禁词的变体写法：谐音（"zui低"）、拼音、异体字（"蕞低"）、符号分隔（"最 低"）、拆字。
+商品标题：{{title}}
+商品描述：{{description}}
+违禁词参考（找出它们的变体）：{{bannedWordsRef}}
+
+规则：
+1. 发现明显变体 → verdict=REJECT，riskPhrases=发现的变体词列表
+2. 未发现变体 → verdict=PASS，riskPhrases=空列表
+3. 拿不准 → verdict=ESCALATE
